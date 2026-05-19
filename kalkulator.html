@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maxsus Kalkulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e5a0;
+    --accent2: #0066ff;
+    --accent3: #ff6b35;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --step-bg: #13131e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,160,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; right: -200px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0,102,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 480px;
+    padding: 40px 36px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    border-radius: 20px 20px 0 0;
+  }
+
+  .header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .header .formula-tag {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    display: inline-block;
+  }
+
+  .input-group {
+    margin-bottom: 28px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    padding: 16px 60px 16px 20px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .input-wrap input:focus {
+    border-color: var(--accent);
+  }
+
+  .input-wrap input::placeholder { color: var(--muted); font-weight: 300; }
+
+  .input-wrap .currency {
+    position: absolute;
+    right: 18px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .btn-calc {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    padding: 16px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-bottom: 28px;
+  }
+
+  .btn-calc:hover { opacity: 0.88; }
+  .btn-calc:active { transform: scale(0.98); }
+
+  .steps {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .steps.visible { display: flex; }
+
+  .step {
+    background: var(--step-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  .step:nth-child(1) { animation-delay: 0.05s; }
+  .step:nth-child(2) { animation-delay: 0.12s; }
+  .step:nth-child(3) { animation-delay: 0.19s; }
+  .step:nth-child(4) { animation-delay: 0.26s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-left { display: flex; align-items: center; gap: 10px; }
+
+  .step-badge {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .badge-green  { background: rgba(0,229,160,0.15); color: var(--accent); }
+  .badge-red    { background: rgba(255,107,53,0.15); color: var(--accent3); }
+  .badge-blue   { background: rgba(0,102,255,0.15); color: #5599ff; }
+  .badge-yellow { background: rgba(255,200,0,0.15); color: #ffc800; }
+
+  .step-desc { color: var(--muted); }
+  .step-val  { font-weight: 600; color: var(--text); }
+
+  .result-box {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 22px 24px;
+    text-align: center;
+    animation: fadeUp 0.4s 0.3s ease both;
+  }
+
+  .result-box.visible { display: block; }
+
+  .result-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .result-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+
+  .btn-reset {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 11px;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: border-color 0.2s, color 0.2s;
+    display: none;
+  }
+
+  .btn-reset.visible { display: block; }
+  .btn-reset:hover { border-color: var(--muted); color: var(--text); }
+
+  .formula-steps {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .fs {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .fs.green  { border-color: rgba(0,229,160,0.4); color: var(--accent); }
+  .fs.red    { border-color: rgba(255,107,53,0.4); color: var(--accent3); }
+  .fs.blue   { border-color: rgba(85,153,255,0.4); color: #5599ff; }
+  .fs.yellow { border-color: rgba(255,200,0,0.4); color: #ffc800; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <h1>Maxsus Kalkulator</h1>
+    <div class="formula-tag">Hisoblash formulasi</div>
+    <div class="formula-steps" style="margin-top:12px">
+      <span class="fs green">+3%</span>
+      <span class="fs red">−200</span>
+      <span class="fs blue">+30%</span>
+      <span class="fs yellow">+200</span>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label class="input-label" for="mainInput">Boshlang'ich son</label>
+    <div class="input-wrap">
+      <input type="number" id="mainInput" placeholder="0" autocomplete="off" />
+      <span class="currency">son</span>
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calculate()">Hisoblash →</button>
+
+  <div class="steps" id="steps">
+    <div class="step">
+      <div class="step-left">
+        <div class="step-badge badge-green">1</div>
+        <span class="step-desc" id="d1"></span>
+      </div>
+      <span class="step-val" id="v1"></span>
+    </div>
+    <div class="step">
+      <div class="step-left">
+        <div class="step-badge badge-red">2</div>
+        <span class="step-desc" id="d2"></span>
+      </div>
+      <span class="step-val" id="v2"></span>
+    </div>
+    <div class="step">
+      <div class="step-left">
+        <div class="step-badge badge-blue">3</div>
+        <span class="step-desc" id="d3"></span>
+      </div>
+      <span class="step-val" id="v3"></span>
+    </div>
+    <div class="step">
+      <div class="step-left">
+        <div class="step-badge badge-yellow">4</div>
+        <span class="step-desc" id="d4"></span>
+      </div>
+      <span class="step-val" id="v4"></span>
+    </div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-label">Yakuniy natija</div>
+    <div class="result-num" id="resultNum">—</div>
+  </div>
+
+  <button class="btn-reset" id="resetBtn" onclick="reset()">↺ Qayta hisoblash</button>
+</div>
+
+<script>
+  function fmt(n) {
+    return parseFloat(n.toFixed(4)).toLocaleString('uz-UZ', { maximumFractionDigits: 4 });
+  }
+
+  function calculate() {
+    const raw = document.getElementById('mainInput').value.trim();
+    if (raw === '' || isNaN(raw)) {
+      document.getElementById('mainInput').style.borderColor = '#ff4455';
+      setTimeout(() => document.getElementById('mainInput').style.borderColor = '', 800);
+      return;
+    }
+
+    const X = parseFloat(raw);
+
+    // Step 1: X + 3%
+    const s1 = X + X * 0.03;
+    // Step 2: s1 - 200
+    const s2 = s1 - 200;
+    // Step 3: s2 + 30%
+    const s3 = s2 + s2 * 0.30;
+    // Step 4: s3 + 200
+    const s4 = s3 + 200;
+
+    document.getElementById('d1').textContent = fmt(X) + ' ga 3% qo\'shildi';
+    document.getElementById('v1').textContent = fmt(s1);
+
+    document.getElementById('d2').textContent = fmt(s1) + ' dan 200 ayrildi';
+    document.getElementById('v2').textContent = fmt(s2);
+
+    document.getElementById('d3').textContent = fmt(s2) + ' ga 30% qo\'shildi';
+    document.getElementById('v3').textContent = fmt(s3);
+
+    document.getElementById('d4').textContent = fmt(s3) + ' ga 200 qo\'shildi';
+    document.getElementById('v4').textContent = fmt(s4);
+
+    document.getElementById('resultNum').textContent = fmt(s4);
+
+    document.getElementById('steps').classList.add('visible');
+    document.getElementById('resultBox').classList.add('visible');
+    document.getElementById('resetBtn').classList.add('visible');
+  }
+
+  function reset() {
+    document.getElementById('mainInput').value = '';
+    document.getElementById('steps').classList.remove('visible');
+    document.getElementById('resultBox').classList.remove('visible');
+    document.getElementById('resetBtn').classList.remove('visible');
+    document.getElementById('mainInput').focus();
+  }
+
+  document.getElementById('mainInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') calculate();
+  });
+</script>
+</body>
+</html>
